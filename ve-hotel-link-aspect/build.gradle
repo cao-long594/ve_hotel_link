@@ -1,0 +1,13 @@
+dependencies {
+    compile(
+            "cn.vetech.charge.cloud:charge-cloud-framework",//版本号已经在父工程build.gradle中定义
+            "cn.vetech.charge.cloud:charge-cloud-springcloud",
+
+    )
+}
+
+
+
+
+
+

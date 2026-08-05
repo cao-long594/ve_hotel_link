@@ -1,0 +1,33 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+         xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
+    <parent>
+        <artifactId>charge-cloud-parent</artifactId>
+        <groupId>cn.vetech.charge.cloud</groupId>
+        <version>2.0-SNAPSHOT</version>
+        <relativePath/>
+    </parent>
+    <modelVersion>4.0.0</modelVersion>
+    <groupId>cn.vetech.center</groupId>
+    <artifactId>ve-hotel-link-api</artifactId>
+    <version>1.0-SNAPSHOT</version>
+
+    <name>ve-hotel-link-api</name>
+    <dependencies>
+        <dependency>
+            <groupId>cn.vetech.charge.cloud</groupId>
+            <artifactId>charge-cloud-framework</artifactId>
+        </dependency>
+        <dependency>
+            <groupId>cn.vetech.charge.cloud</groupId>
+            <artifactId>charge-cloud-springcloud</artifactId>
+            <exclusions>
+                <exclusion>
+                    <artifactId>charge-cloud-common-business-check</artifactId>
+                    <groupId>cn.vetech.charge.cloud</groupId>
+                </exclusion>
+            </exclusions>
+        </dependency>
+    </dependencies>
+</project>
