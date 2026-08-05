@@ -19,6 +19,8 @@ import cn.vetech.center.hotel.link.supply.ylfx.ordercancel.YlfxOrderCancelServic
 import cn.vetech.center.hotel.link.supply.ylfx.orderdetail.YlfxOrderDetailService;
 import cn.vetech.center.hotel.link.supply.ylfx.ratesearch.YlfxRateSearchService;
 import cn.vetech.center.hotel.link.supply.ylfx.validate.YlfxValidateService;
+import cn.vetech.center.hotel.link.supply.ylfx.v2.ratesearch.YlfxV2RateSearchService;
+import cn.vetech.center.hotel.link.supply.ylfx.v2.validate.YlfxV2ValidateService;
 import cn.vetech.center.hotel.log.annotation.CommonLog;
 import cn.vetech.center.hotel.log.annotation.Log;
 import cn.vetech.charge.cpfl.DdlxEnum;
@@ -45,6 +47,16 @@ public class YlfxHotelLinkSupplyService implements IHotelLinkSupplyService {
     @Autowired
     private YlfxValidateService validateService;
     /**
+     * V2 查询报价
+     */
+    @Autowired
+    private YlfxV2RateSearchService v2RateSearchService;
+    /**
+     * V2 下单前验价
+     */
+    @Autowired
+    private YlfxV2ValidateService v2ValidateService;
+    /**
      * 下单
      */
     @Autowired
@@ -65,6 +77,9 @@ public class YlfxHotelLinkSupplyService implements IHotelLinkSupplyService {
     @Override
     public LinkHotelRateSearchVO rateSearch(LinkHotelRateSearchDTO dto) throws SupplyConnectException {
         YlfxConfig config = SupplierConfigUtils.parse(dto.getSupplier(), YlfxConfig.class);
+        if ("v2".equals(config.getApiVersion())) {
+            return v2RateSearchService.rateSearch(dto, config);
+        }
         return rateSearchService.rateSearch(dto, config);
     }
 
@@ -72,6 +87,9 @@ public class YlfxHotelLinkSupplyService implements IHotelLinkSupplyService {
     @Override
     public LinkHotelValidateVO validate(LinkHotelValidateDTO dto) throws SupplyConnectException {
         YlfxConfig config = SupplierConfigUtils.parse(dto.getSupplier(), YlfxConfig.class);
+        if ("v2".equals(config.getApiVersion())) {
+            return v2ValidateService.validate(dto, config);
+        }
         return validateService.validate(dto, config);
     }
 

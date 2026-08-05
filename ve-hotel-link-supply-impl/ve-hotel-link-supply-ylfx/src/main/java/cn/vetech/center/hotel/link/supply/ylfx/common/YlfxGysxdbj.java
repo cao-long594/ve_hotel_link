@@ -13,6 +13,10 @@ public class YlfxGysxdbj {
      * 酒店id
      */
     private String hotelId;
+    /**
+     * 接口版本
+     */
+    private String apiVersion;
 
     public Integer getInvoiceMode() {
         return invoiceMode;
@@ -28,5 +32,13 @@ public class YlfxGysxdbj {
 
     public void setHotelId(String hotelId) {
         this.hotelId = hotelId;
+    }
+
+    public String getApiVersion() {
+        return apiVersion;
+    }
+
+    public void setApiVersion(String apiVersion) {
+        this.apiVersion = apiVersion;
     }
 }
