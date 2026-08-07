@@ -16,6 +16,10 @@ public class YlfxConfig extends BaseConfig {
      */
     private String url;
     /**
+     * V2 接口地址
+     */
+    private String newUrl;
+    /**
      * appId
      */
     private String appId;
@@ -50,6 +54,14 @@ public class YlfxConfig extends BaseConfig {
 
     public void setUrl(String url) {
         this.url = url;
+    }
+
+    public String getNewUrl() {
+        return newUrl;
+    }
+
+    public void setNewUrl(String newUrl) {
+        this.newUrl = newUrl;
     }
 
     public String getAppId() {

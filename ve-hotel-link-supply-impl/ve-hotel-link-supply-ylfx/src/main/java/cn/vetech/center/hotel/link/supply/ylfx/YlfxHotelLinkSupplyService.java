@@ -21,6 +21,9 @@ import cn.vetech.center.hotel.link.supply.ylfx.ratesearch.YlfxRateSearchService;
 import cn.vetech.center.hotel.link.supply.ylfx.validate.YlfxValidateService;
 import cn.vetech.center.hotel.link.supply.ylfx.v2.ratesearch.YlfxV2RateSearchService;
 import cn.vetech.center.hotel.link.supply.ylfx.v2.validate.YlfxV2ValidateService;
+import cn.vetech.center.hotel.link.supply.ylfx.v2.orderbook.YlfxV2OrderBookService;
+import cn.vetech.center.hotel.link.supply.ylfx.v2.ordercancel.YlfxV2OrderCancelService;
+import cn.vetech.center.hotel.link.supply.ylfx.v2.orderdetail.YlfxV2OrderDetailService;
 import cn.vetech.center.hotel.log.annotation.CommonLog;
 import cn.vetech.center.hotel.log.annotation.Log;
 import cn.vetech.charge.cpfl.DdlxEnum;
@@ -56,6 +59,12 @@ public class YlfxHotelLinkSupplyService implements IHotelLinkSupplyService {
      */
     @Autowired
     private YlfxV2ValidateService v2ValidateService;
+    @Autowired
+    private YlfxV2OrderBookService v2OrderBookService;
+    @Autowired
+    private YlfxV2OrderCancelService v2OrderCancelService;
+    @Autowired
+    private YlfxV2OrderDetailService v2OrderDetailService;
     /**
      * 下单
      */
@@ -97,6 +106,9 @@ public class YlfxHotelLinkSupplyService implements IHotelLinkSupplyService {
     @Override
     public LinkHotelOrderBookVO orderBook(LinkHotelOrderBookDTO dto) throws SupplyConnectException {
         YlfxConfig config = SupplierConfigUtils.parse(dto.getSupplier(), YlfxConfig.class);
+        if ("v2".equals(config.getApiVersion())) {
+            return v2OrderBookService.orderBook(dto, config);
+        }
         return bookService.orderBook(dto, config);
     }
 
@@ -104,6 +116,9 @@ public class YlfxHotelLinkSupplyService implements IHotelLinkSupplyService {
     @Override
     public LinkHotelOrderDetailVO orderDetail(LinkHotelOrderDetailDTO dto) throws SupplyConnectException {
         YlfxConfig config = SupplierConfigUtils.parse(dto.getSupplier(), YlfxConfig.class);
+        if ("v2".equals(config.getApiVersion())) {
+            return v2OrderDetailService.orderDetail(dto, config);
+        }
         return detailService.orderDetail(dto, config);
     }
 
@@ -111,6 +126,9 @@ public class YlfxHotelLinkSupplyService implements IHotelLinkSupplyService {
     @Override
     public LinkHotelOrderCancelVO orderCancel(LinkHotelOrderCancelDTO dto) throws SupplyConnectException {
         YlfxConfig config = SupplierConfigUtils.parse(dto.getSupplier(), YlfxConfig.class);
+        if ("v2".equals(config.getApiVersion())) {
+            return v2OrderCancelService.orderCancel(dto, config);
+        }
         return cancelService.orderCancel(dto, config);
     }
 }

@@ -2,10 +2,9 @@ package cn.vetech.center.hotel.link.supply.ylfx.v2.ratesearch;
 
 import cn.vetech.center.hotel.link.api.enums.FyEnum;
 import cn.vetech.center.hotel.link.api.enums.HotelDeductionTypeEnum;
-import cn.vetech.center.hotel.link.api.enums.SuffixTypeEnum;
+import cn.vetech.center.hotel.link.api.enums.RoomStatusEnum;
 import cn.vetech.center.hotel.link.api.ratesearch.vo.FeeInfo;
 import cn.vetech.center.hotel.link.api.ratesearch.vo.HotelLadderDeductionInfo;
-import cn.vetech.center.hotel.link.api.ratesearch.vo.HotelTimeInfo;
 import cn.vetech.center.hotel.link.api.ratesearch.dto.LinkHotelRateSearchDTO;
 import cn.vetech.center.hotel.link.api.ratesearch.vo.LinkHotelRateSearchVO;
 import cn.vetech.center.hotel.link.api.ratesearch.vo.SearchNightlyRate;
@@ -17,10 +16,12 @@ import cn.vetech.center.hotel.link.supply.ylfx.common.YlfxConfig;
 import cn.vetech.center.hotel.link.supply.ylfx.common.YlfxGysxdbj;
 import cn.vetech.center.hotel.link.supply.ylfx.v2.common.YlfxV2UtilsService;
 import cn.vetech.center.hotel.link.supply.ylfx.v2.ratesearch.request.YlfxV2RateSearchRequest;
-import cn.vetech.center.hotel.link.supply.ylfx.v2.response.YlfxV2RateSearchResponse;
+import cn.vetech.center.hotel.link.supply.ylfx.v2.ratesearch.response.YlfxV2RateSearchResponse;
 import cn.vetech.center.hotel.link.util.JacksonUtils;
 import cn.vetech.center.hotel.link.util.ratesearch.RateSearchApiRes;
 import cn.vetech.center.hotel.link.util.ratesearch.RateSearchCommonUtils;
+import cn.vetech.center.hotel.link.util.ratesearch.pojo.SearchLadderDeductionInfo;
+import cn.vetech.center.hotel.link.api.enums.HotelTimeZoneEnum;
 import org.apache.commons.collections4.CollectionUtils;
 import org.apache.commons.lang3.StringUtils;
 import org.apache.commons.lang3.math.NumberUtils;
@@ -47,19 +48,36 @@ public class YlfxV2RateSearchService {
     @Autowired
     private YlfxV2UtilsService utilsService;
 
+    /**
+     * 查询易旅分销 V2 可订产品。
+     *
+     * @param dto 标准报价请求
+     * @param config 易旅分销配置
+     * @return 标准报价响应
+     */
     public LinkHotelRateSearchVO rateSearch(LinkHotelRateSearchDTO dto, YlfxConfig config) {
         try {
-            YlfxV2RateSearchResponse response = JacksonUtils.parseNonEmpty(utilsService.sendPost(convertRequest(dto, config), config, HOTEL_SEARCH_URI), YlfxV2RateSearchResponse.class);
+            YlfxV2RateSearchRequest request = convertRequest(dto, config);
+            String responseBody = utilsService.sendPost(request, config, HOTEL_SEARCH_URI);
+            YlfxV2RateSearchResponse response = JacksonUtils.parseNonEmpty(responseBody, YlfxV2RateSearchResponse.class);
             if (response == null || !StringUtils.equals("200", response.getCode())) {
                 return RateSearchApiRes.fail(response == null ? "响应结果为空" : response.getMessage());
             }
-            return RateSearchApiRes.success(convertResponse(dto, response.getData()));
+            LinkHotelRateSearchVO result = convertResponse(dto, response.getData());
+            return RateSearchApiRes.success(result);
         } catch (Exception e) {
             LOGGER.error("易旅分销 V2 查询报价接口异常", e);
             return RateSearchApiRes.fail("接口异常");
         }
     }
 
+    /**
+     * 转换 V2 报价请求。
+     *
+     * @param dto 标准报价请求
+     * @param config 易旅分销配置
+     * @return V2 报价请求
+     */
     private YlfxV2RateSearchRequest convertRequest(LinkHotelRateSearchDTO dto, YlfxConfig config) {
         YlfxV2RateSearchRequest request = new YlfxV2RateSearchRequest();
         request.setCustomerCode(config.getCustomerCode());
@@ -72,8 +90,18 @@ public class YlfxV2RateSearchService {
         return request;
     }
 
+    /**
+     * 构造入住人房间信息。
+     *
+     * @param roomCount 房间数
+     * @param adult 成人数
+     * @param child 儿童数
+     * @param age 儿童年龄
+     * @return V2 入住人房间列表
+     */
     private List<YlfxV2RateSearchRequest.PaxRoom> buildPaxRooms(Integer roomCount, String adult, String child, String age) {
-        List<Integer> childrenAges = StringUtils.isBlank(age) ? null : java.util.Arrays.stream(age.split(",")).map(NumberUtils::toInt).collect(Collectors.toList());
+        List<Integer> childrenAges = StringUtils.isBlank(age) ? null
+                : java.util.Arrays.stream(age.split(",")).map(NumberUtils::toInt).collect(Collectors.toList());
         List<YlfxV2RateSearchRequest.PaxRoom> paxRooms = new ArrayList<>();
         int count = roomCount == null ? 0 : roomCount;
         for (int index = 1; index <= count; index++) {
@@ -87,11 +115,20 @@ public class YlfxV2RateSearchService {
         return paxRooms;
     }
 
+    /**
+     * 转换 V2 报价响应。
+     *
+     * @param dto 标准报价请求
+     * @param data V2 报价数据
+     * @return 标准报价响应
+     */
     private LinkHotelRateSearchVO convertResponse(LinkHotelRateSearchDTO dto, YlfxV2RateSearchResponse.Data data) {
         LinkHotelRateSearchVO vo = new LinkHotelRateSearchVO();
         vo.setCheckInDate(dto.getCheckInDate());
         vo.setCheckOutDate(dto.getCheckOutDate());
-        if (data == null || CollectionUtils.isEmpty(data.getRooms())) { return vo; }
+        if (data == null || CollectionUtils.isEmpty(data.getRooms())) {
+            return vo;
+        }
         List<SearchRoom> rooms = new ArrayList<>();
         for (YlfxV2RateSearchResponse.Room sourceRoom : data.getRooms()) {
             SearchRoom room = RateSearchCommonUtils.initSearchRoom(FyEnum.YLFX);
@@ -106,8 +143,17 @@ public class YlfxV2RateSearchService {
         return vo;
     }
 
+    /**
+     * 转换房型下的价格计划。
+     *
+     * @param hotelCode 酒店编码
+     * @param room V2 房型
+     * @return 标准价格计划列表
+     */
     private List<SearchRatePlan> convertRatePlans(String hotelCode, YlfxV2RateSearchResponse.Room room) {
-        if (CollectionUtils.isEmpty(room.getRates())) { return new ArrayList<>(); }
+        if (CollectionUtils.isEmpty(room.getRates())) {
+            return new ArrayList<>();
+        }
         return room.getRates().stream().map(rate -> {
             SearchRatePlan plan = RateSearchCommonUtils.initSearchRatePlan(FyEnum.YLFX);
             plan.setHotelId(hotelCode);
@@ -120,20 +166,18 @@ public class YlfxV2RateSearchService {
             plan.setZfj(NumberUtils.toDouble(rate.getTotalPrice()));
             plan.setGysyssfhj(rate.getTotalTaxAndFee());
             plan.setGysyssfbz(rate.getCurrencyCode());
+            RateSearchCommonUtils.convertRoomStatus(plan, RoomStatusEnum.GOOD);
             YlfxGysxdbj gysxdbj = new YlfxGysxdbj();
             gysxdbj.setHotelId(hotelCode);
-            gysxdbj.setApiVersion("v2");
+            gysxdbj.setRoomCode(room.getRoomCode());
             plan.setGysxdbj(JacksonUtils.toJsonWithNonEmpty(gysxdbj));
             plan.setInstantConfirmation(InstantConfirmationEnum.instantConfirm(Integer.valueOf(1).equals(rate.getInstantConfirm())));
             if (rate.getMeal() != null) {
                 RateSearchCommonUtils.convertFreeMealByMealNum(plan, rate.getMeal().getBreakfastCount());
             }
-            plan.setLadderDeductionInfoList(convertCancelPolicies(rate));
-            if (CollectionUtils.isEmpty(rate.getCancelPolicies())) {
-                RateSearchCommonUtils.convertSearchPrepayRule(plan, SuffixTypeEnum.NOT_CANCEL, null, null);
-            } else {
-                RateSearchCommonUtils.convertSearchPrepayRule(plan, SuffixTypeEnum.TIME_CANCEL, null, rate.getCancelPolicies().get(0).getFrom());
-            }
+            List<HotelLadderDeductionInfo> cancelPolicies = convertCancelPolicies(rate);
+            plan.setLadderDeductionInfoList(cancelPolicies);
+            RateSearchCommonUtils.convertSearchPrepayRule(plan, cancelPolicies);
             plan.setNightlyRates((rate.getDailyPriceList() == null ? new ArrayList<YlfxV2RateSearchResponse.DailyPrice>() : rate.getDailyPriceList()).stream().map(price -> {
                 SearchNightlyRate nightlyRate = new SearchNightlyRate();
                 nightlyRate.setDate(price.getDate());
@@ -156,24 +200,27 @@ public class YlfxV2RateSearchService {
      * @return 标准取消规则明细
      */
     private List<HotelLadderDeductionInfo> convertCancelPolicies(YlfxV2RateSearchResponse.Rate rate) {
-        List<HotelLadderDeductionInfo> deductions = new ArrayList<>();
+        List<SearchLadderDeductionInfo> sourcePolicies = new ArrayList<>();
         if (CollectionUtils.isEmpty(rate.getCancelPolicies())) {
-            HotelLadderDeductionInfo deduction = new HotelLadderDeductionInfo();
-            deduction.setDeductionType(HotelDeductionTypeEnum.CANNOT_CANCEL.getCode());
-            deductions.add(deduction);
-            return deductions;
+            SearchLadderDeductionInfo deduction = new SearchLadderDeductionInfo();
+            deduction.setDeductionType(HotelDeductionTypeEnum.CANNOT_CANCEL);
+            sourcePolicies.add(deduction);
+            return sourcePolicies.stream().map(RateSearchCommonUtils::convertDeductTime).collect(Collectors.toList());
         }
-        for (YlfxV2RateSearchResponse.CancelPolicy policy : rate.getCancelPolicies()) {
-            HotelLadderDeductionInfo deduction = new HotelLadderDeductionInfo();
+        for (int index = 0; index < rate.getCancelPolicies().size(); index++) {
+            YlfxV2RateSearchResponse.CancelPolicy policy = rate.getCancelPolicies().get(index);
+            SearchLadderDeductionInfo deduction = new SearchLadderDeductionInfo();
             deduction.setDeductionType(NumberUtils.toDouble(policy.getAmount()) == 0
-                    ? HotelDeductionTypeEnum.FREE.getCode() : HotelDeductionTypeEnum.LADDER.getCode());
-            HotelTimeInfo startTime = new HotelTimeInfo();
-            startTime.setTime(policy.getFrom());
-            deduction.setOriginalStartDeductTime(startTime);
+                    ? HotelDeductionTypeEnum.FREE : HotelDeductionTypeEnum.LADDER);
+            deduction.setHotelLocalTimeZone(HotelTimeZoneEnum.UTC_800.getCode());
+            deduction.setStartDateStr(policy.getFrom());
+            if (index + 1 < rate.getCancelPolicies().size()) {
+                deduction.setEndDateStr(rate.getCancelPolicies().get(index + 1).getFrom());
+            }
             deduction.setOriginPrice(buildFeeInfo(policy.getAmount(), rate.getCurrencyCode(), rate.getCurrencyCode()));
-            deductions.add(deduction);
+            sourcePolicies.add(deduction);
         }
-        return deductions;
+        return sourcePolicies.stream().map(RateSearchCommonUtils::convertDeductTime).collect(Collectors.toList());
     }
 
     /**
