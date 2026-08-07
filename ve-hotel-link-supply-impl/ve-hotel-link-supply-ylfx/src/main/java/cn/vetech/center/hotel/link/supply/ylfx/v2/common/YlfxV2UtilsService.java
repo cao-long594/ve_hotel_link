@@ -34,41 +34,28 @@ public class YlfxV2UtilsService {
     private HttpService httpService;
 
     /**
-     * 发送 V2 POST 请求
+     * 发送 V2 POST 请求。
      *
      * @param request 请求参数
      * @param config 供应商配置
-     * @param uri 接口地址
+     * @param methodEnum V2 接口枚举
      * @return 原始响应
-     * @throws Exception 请求异常
      */
-    public String sendPost(Object request, YlfxConfig config, String uri) {
-        String appid = StringUtils.defaultIfBlank(config.getAppid(), config.getAppId());
+    public String sendPost(Object request, YlfxConfig config, YlfxV2MethodEnum methodEnum) {
+        String appid = config.getAppId();
         String timestamp = String.valueOf(System.currentTimeMillis());
         Map<String, String> headers = HttpClientUtilExt.headMapJson();
         headers.put("appid", appid);
         headers.put("timestamp", timestamp);
         headers.put("signature", MD5Tool.MD5Encode(MD5Tool.MD5Encode(appid + config.getSecret()) + timestamp));
         String baseUrl = StringUtils.defaultIfBlank(config.getNewUrl(), config.getUrl());
-        String url = UrlUtils.completeUrl(baseUrl, uri);
+        String url = UrlUtils.completeUrl(baseUrl, methodEnum.getUri());
         String params = JsonMapper.nonEmptyMapper().toJson(request);
         try {
             return httpService.doPostBody(url, params, headers);
         } catch (Exception e) {
-            LOGGER.error("【易旅分销 V2】请求异常【{}】", e.getMessage(), e);
+            LOGGER.error("【{}】请求异常【{}】", methodEnum.getDesc(), e.getMessage(), e);
             return StringUtils.EMPTY;
         }
-    }
-
-    /**
-     * 发送 V2 POST 请求。
-     *
-     * @param request 请求参数
-     * @param config 配置信息
-     * @param methodEnum V2 接口枚举
-     * @return 原始响应
-     */
-    public String sendPost(Object request, YlfxConfig config, YlfxV2MethodEnum methodEnum) {
-        return sendPost(request, config, methodEnum.getUri());
     }
 }

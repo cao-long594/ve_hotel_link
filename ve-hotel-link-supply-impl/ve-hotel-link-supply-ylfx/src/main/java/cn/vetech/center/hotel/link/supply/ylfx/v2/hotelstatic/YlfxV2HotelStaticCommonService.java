@@ -4,6 +4,7 @@ import cn.vetech.center.hotel.link.supply.ylfx.common.YlfxConfig;
 import cn.vetech.center.hotel.link.supply.ylfx.v2.common.YlfxV2UtilsService;
 import cn.vetech.center.hotel.link.supply.ylfx.v2.enums.YlfxV2MethodEnum;
 import cn.vetech.center.hotel.link.supply.ylfx.v2.hotelstatic.request.YlfxV2HotelInfosRequest;
+import cn.vetech.center.hotel.link.supply.ylfx.v2.hotelstatic.response.YlfxV2HotelInfosHotel;
 import cn.vetech.center.hotel.link.supply.ylfx.v2.hotelstatic.response.YlfxV2HotelInfosResponse;
 import cn.vetech.center.hotel.link.util.JacksonUtils;
 import org.apache.commons.collections4.CollectionUtils;
@@ -36,16 +37,16 @@ public class YlfxV2HotelStaticCommonService {
      * @param config 供应商配置
      * @return 酒店静态信息，响应异常或无数据时返回 null
      */
-    public List<YlfxV2HotelInfosResponse.HotelInfo> getHotelInfos(List<String> hotelCodes, YlfxConfig config) {
+    public List<YlfxV2HotelInfosHotel> getHotelInfos(List<String> hotelCodes, YlfxConfig config) {
         if (CollectionUtils.isEmpty(hotelCodes)) {
             return null;
         }
         try {
-            List<YlfxV2HotelInfosResponse.HotelInfo> hotelInfos = new ArrayList<>();
+            List<YlfxV2HotelInfosHotel> hotelInfos = new ArrayList<>();
             for (int start = 0; start < hotelCodes.size(); start += 50) {
                 int end = Math.min(start + 50, hotelCodes.size());
                 List<String> batchCodes = hotelCodes.subList(start, end);
-                List<YlfxV2HotelInfosResponse.HotelInfo> batchInfos = getHotelInfosBatch(batchCodes, config);
+                List<YlfxV2HotelInfosHotel> batchInfos = getHotelInfosBatch(batchCodes, config);
                 if (CollectionUtils.isNotEmpty(batchInfos)) {
                     hotelInfos.addAll(batchInfos);
                 }
@@ -64,7 +65,7 @@ public class YlfxV2HotelStaticCommonService {
      * @param config 供应商配置
      * @return 本批酒店信息
      */
-    private List<YlfxV2HotelInfosResponse.HotelInfo> getHotelInfosBatch(List<String> hotelCodes, YlfxConfig config) {
+    private List<YlfxV2HotelInfosHotel> getHotelInfosBatch(List<String> hotelCodes, YlfxConfig config) {
         YlfxV2HotelInfosRequest request = convertRequest(hotelCodes, config);
         String result = utilsService.sendPost(request, config, YlfxV2MethodEnum.HOTEL_INFOS);
         if (StringUtils.isBlank(result)) {

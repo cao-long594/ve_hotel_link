@@ -13,8 +13,12 @@ import cn.vetech.center.hotel.link.api.validate.vo.LinkHotelValidateVO;
 import cn.vetech.center.hotel.link.supply.ylfx.common.YlfxConfig;
 import cn.vetech.center.hotel.link.supply.ylfx.v2.common.YlfxV2UtilsService;
 import cn.vetech.center.hotel.link.supply.ylfx.v2.enums.YlfxV2MethodEnum;
+import cn.vetech.center.hotel.link.supply.ylfx.v2.ratesearch.request.YlfxV2RateSearchPaxRoom;
 import cn.vetech.center.hotel.link.supply.ylfx.v2.ratesearch.request.YlfxV2RateSearchRequest;
-import cn.vetech.center.hotel.link.supply.ylfx.v2.ratesearch.response.YlfxV2RateSearchResponse;
+import cn.vetech.center.hotel.link.supply.ylfx.v2.ratesearch.response.YlfxV2RateSearchCancelPolicy;
+import cn.vetech.center.hotel.link.supply.ylfx.v2.ratesearch.response.YlfxV2RateSearchDailyPrice;
+import cn.vetech.center.hotel.link.supply.ylfx.v2.ratesearch.response.YlfxV2RateSearchRate;
+import cn.vetech.center.hotel.link.supply.ylfx.v2.validate.response.YlfxV2ValidateRoom;
 import cn.vetech.center.hotel.link.supply.ylfx.v2.validate.response.YlfxV2ValidateResponse;
 import cn.vetech.center.hotel.link.util.JacksonUtils;
 import cn.vetech.center.hotel.link.util.ratesearch.RateSearchCommonUtils;
@@ -61,7 +65,7 @@ public class YlfxV2ValidateService {
             if (response == null || !StringUtils.equals("200", response.getCode()) || response.getData() == null || response.getData().getRoom() == null || response.getData().getRoom().getRate() == null) {
                 return ValidateApiRes.fail(response == null ? "响应结果为空" : response.getMessage());
             }
-            YlfxV2RateSearchResponse.Rate rate = response.getData().getRoom().getRate();
+            YlfxV2RateSearchRate rate = response.getData().getRoom().getRate();
             LinkHotelValidateVO vo = ValidateApiRes.success();
             vo.setTotalprice(rate.getTotalPrice());
             vo.setCurrencyCode(rate.getCurrencyCode());
@@ -100,11 +104,11 @@ public class YlfxV2ValidateService {
      * @param dto 标准验价请求
      * @return 入住人房间信息
      */
-    private List<YlfxV2RateSearchRequest.PaxRoom> buildPaxRooms(LinkHotelValidateDTO dto) {
+    private List<YlfxV2RateSearchPaxRoom> buildPaxRooms(LinkHotelValidateDTO dto) {
         int roomCount = NumberUtils.toInt(dto.getNumberOfRooms());
-        List<YlfxV2RateSearchRequest.PaxRoom> paxRooms = new ArrayList<>();
+        List<YlfxV2RateSearchPaxRoom> paxRooms = new ArrayList<>();
         for (int index = 1; index <= roomCount; index++) {
-            YlfxV2RateSearchRequest.PaxRoom paxRoom = new YlfxV2RateSearchRequest.PaxRoom();
+            YlfxV2RateSearchPaxRoom paxRoom = new YlfxV2RateSearchPaxRoom();
             paxRoom.setRoomIndex(index);
             paxRoom.setAdults(NumberUtils.toInt(dto.getAdult(), 2));
             paxRoom.setChildren(NumberUtils.toInt(dto.getChild()));
@@ -120,8 +124,8 @@ public class YlfxV2ValidateService {
      * @param sourceRoom 易旅校验房型
      * @return 标准房型节点
      */
-    private List<SearchRoom> convertRooms(LinkHotelValidateDTO dto, YlfxV2ValidateResponse.Room sourceRoom) {
-        YlfxV2RateSearchResponse.Rate sourceRate = sourceRoom.getRate();
+    private List<SearchRoom> convertRooms(LinkHotelValidateDTO dto, YlfxV2ValidateRoom sourceRoom) {
+        YlfxV2RateSearchRate sourceRate = sourceRoom.getRate();
         SearchRoom room = RateSearchCommonUtils.initSearchRoom(FyEnum.YLFX);
         room.setHotelId(dto.getHotelId());
         room.setRoomId(sourceRoom.getRoomCode());
@@ -144,7 +148,7 @@ public class YlfxV2ValidateService {
         if (sourceRate.getMeal() != null) {
             RateSearchCommonUtils.convertFreeMealByMealNum(ratePlan, sourceRate.getMeal().getBreakfastCount());
         }
-        ratePlan.setNightlyRates((sourceRate.getDailyPriceList() == null ? new ArrayList<YlfxV2RateSearchResponse.DailyPrice>()
+        ratePlan.setNightlyRates((sourceRate.getDailyPriceList() == null ? new ArrayList<YlfxV2RateSearchDailyPrice>()
                 : sourceRate.getDailyPriceList()).stream().map(sourcePrice -> {
             SearchNightlyRate nightlyRate = new SearchNightlyRate();
             nightlyRate.setDate(sourcePrice.getDate());
@@ -164,7 +168,7 @@ public class YlfxV2ValidateService {
      * @param rate 易旅报价
      * @return 标准取消规则明细
      */
-    private List<HotelLadderDeductionInfo> convertCancelPolicies(YlfxV2RateSearchResponse.Rate rate) {
+    private List<HotelLadderDeductionInfo> convertCancelPolicies(YlfxV2RateSearchRate rate) {
         List<SearchLadderDeductionInfo> sourcePolicies = new ArrayList<>();
         if (rate.getCancelPolicies() == null || rate.getCancelPolicies().isEmpty()) {
             SearchLadderDeductionInfo deduction = new SearchLadderDeductionInfo();
@@ -173,7 +177,7 @@ public class YlfxV2ValidateService {
             return sourcePolicies.stream().map(RateSearchCommonUtils::convertDeductTime).collect(Collectors.toList());
         }
         for (int index = 0; index < rate.getCancelPolicies().size(); index++) {
-            YlfxV2RateSearchResponse.CancelPolicy policy = rate.getCancelPolicies().get(index);
+            YlfxV2RateSearchCancelPolicy policy = rate.getCancelPolicies().get(index);
             SearchLadderDeductionInfo deduction = new SearchLadderDeductionInfo();
             deduction.setDeductionType(NumberUtils.toDouble(policy.getAmount()) == 0
                     ? HotelDeductionTypeEnum.FREE : HotelDeductionTypeEnum.LADDER);
