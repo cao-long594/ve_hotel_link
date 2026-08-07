@@ -4,6 +4,7 @@ import cn.vetech.center.hotel.link.api.ordercancel.dto.LinkHotelOrderCancelDTO;
 import cn.vetech.center.hotel.link.api.ordercancel.vo.LinkHotelOrderCancelVO;
 import cn.vetech.center.hotel.link.supply.ylfx.common.YlfxConfig;
 import cn.vetech.center.hotel.link.supply.ylfx.v2.common.YlfxV2UtilsService;
+import cn.vetech.center.hotel.link.supply.ylfx.v2.enums.YlfxV2MethodEnum;
 import cn.vetech.center.hotel.link.util.JacksonUtils;
 import cn.vetech.center.hotel.link.util.ordercancel.OrderCancelApiRes;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -12,12 +13,11 @@ import org.springframework.stereotype.Service;
 /** 易旅分销 V2 取消订单服务。 */
 @Service
 public class YlfxV2OrderCancelService {
-    private static final String URI = "/open/booking/cancel";
     @Autowired private YlfxV2UtilsService utilsService;
     public LinkHotelOrderCancelVO orderCancel(LinkHotelOrderCancelDTO dto, YlfxConfig config) {
         try {
             Request request = new Request(config.getCustomerCode(), dto.getLocalOrderId());
-            String responseBody = utilsService.sendPost(request, config, URI);
+            String responseBody = utilsService.sendPost(request, config, YlfxV2MethodEnum.CANCEL);
             Response response = JacksonUtils.parseNonEmpty(responseBody, Response.class);
             if (response == null || !"200".equals(response.getCode()) || response.getData() == null) {
                 return OrderCancelApiRes.fail(response == null ? "响应结果为空" : response.getMessage());

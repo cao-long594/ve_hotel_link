@@ -17,11 +17,6 @@ public class YlfxGysxdbj {
      * 接口版本
      */
     private String apiVersion;
-    /**
-     * V2 房型编码
-     */
-    private String roomCode;
-
     public Integer getInvoiceMode() {
         return invoiceMode;
     }
@@ -38,6 +33,7 @@ public class YlfxGysxdbj {
         this.hotelId = hotelId;
     }
 
+
     public String getApiVersion() {
         return apiVersion;
     }
@@ -46,11 +42,4 @@ public class YlfxGysxdbj {
         this.apiVersion = apiVersion;
     }
 
-    public String getRoomCode() {
-        return roomCode;
-    }
-
-    public void setRoomCode(String roomCode) {
-        this.roomCode = roomCode;
-    }
 }

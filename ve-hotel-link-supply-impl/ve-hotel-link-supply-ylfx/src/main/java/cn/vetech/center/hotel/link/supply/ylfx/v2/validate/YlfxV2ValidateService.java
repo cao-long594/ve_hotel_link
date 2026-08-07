@@ -12,6 +12,7 @@ import cn.vetech.center.hotel.link.api.validate.dto.LinkHotelValidateDTO;
 import cn.vetech.center.hotel.link.api.validate.vo.LinkHotelValidateVO;
 import cn.vetech.center.hotel.link.supply.ylfx.common.YlfxConfig;
 import cn.vetech.center.hotel.link.supply.ylfx.v2.common.YlfxV2UtilsService;
+import cn.vetech.center.hotel.link.supply.ylfx.v2.enums.YlfxV2MethodEnum;
 import cn.vetech.center.hotel.link.supply.ylfx.v2.ratesearch.request.YlfxV2RateSearchRequest;
 import cn.vetech.center.hotel.link.supply.ylfx.v2.ratesearch.response.YlfxV2RateSearchResponse;
 import cn.vetech.center.hotel.link.supply.ylfx.v2.validate.response.YlfxV2ValidateResponse;
@@ -42,7 +43,6 @@ import java.util.stream.Collectors;
 @Service
 public class YlfxV2ValidateService {
     private static final Logger LOGGER = LoggerFactory.getLogger(YlfxV2ValidateService.class);
-    private static final String PRECHECK_URI = "/open/avail/precheck";
     @Autowired
     private YlfxV2UtilsService utilsService;
 
@@ -56,7 +56,7 @@ public class YlfxV2ValidateService {
     public LinkHotelValidateVO validate(LinkHotelValidateDTO dto, YlfxConfig config) {
         try {
             YlfxV2RateSearchRequest request = convertRequest(dto, config);
-            String responseBody = utilsService.sendPost(request, config, PRECHECK_URI);
+            String responseBody = utilsService.sendPost(request, config, YlfxV2MethodEnum.PRECHECK);
             YlfxV2ValidateResponse response = JacksonUtils.parseNonEmpty(responseBody, YlfxV2ValidateResponse.class);
             if (response == null || !StringUtils.equals("200", response.getCode()) || response.getData() == null || response.getData().getRoom() == null || response.getData().getRoom().getRate() == null) {
                 return ValidateApiRes.fail(response == null ? "响应结果为空" : response.getMessage());
@@ -140,7 +140,6 @@ public class YlfxV2ValidateService {
         RateSearchCommonUtils.convertSearchPrepayRule(ratePlan, cancelPolicies);
         YlfxGysxdbj gysxdbj = new YlfxGysxdbj();
         gysxdbj.setHotelId(dto.getHotelId());
-        gysxdbj.setRoomCode(sourceRoom.getRoomCode());
         ratePlan.setGysxdbj(JacksonUtils.toJsonWithNonEmpty(gysxdbj));
         if (sourceRate.getMeal() != null) {
             RateSearchCommonUtils.convertFreeMealByMealNum(ratePlan, sourceRate.getMeal().getBreakfastCount());

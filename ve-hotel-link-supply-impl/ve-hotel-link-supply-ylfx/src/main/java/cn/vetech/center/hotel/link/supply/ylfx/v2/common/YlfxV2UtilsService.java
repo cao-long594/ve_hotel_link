@@ -3,6 +3,7 @@ package cn.vetech.center.hotel.link.supply.ylfx.v2.common;
 import cn.vetech.center.hotel.link.http.HttpClientUtilExt;
 import cn.vetech.center.hotel.link.http.HttpService;
 import cn.vetech.center.hotel.link.supply.ylfx.common.YlfxConfig;
+import cn.vetech.center.hotel.link.supply.ylfx.v2.enums.YlfxV2MethodEnum;
 import cn.vetech.center.hotel.link.util.UrlUtils;
 import cn.vetech.charge.cloud.modules.utils.security.MD5Tool;
 import cn.vetech.charge.cloud.modules.utils.mapper.JsonMapper;
@@ -57,5 +58,17 @@ public class YlfxV2UtilsService {
             LOGGER.error("【易旅分销 V2】请求异常【{}】", e.getMessage(), e);
             return StringUtils.EMPTY;
         }
+    }
+
+    /**
+     * 发送 V2 POST 请求。
+     *
+     * @param request 请求参数
+     * @param config 配置信息
+     * @param methodEnum V2 接口枚举
+     * @return 原始响应
+     */
+    public String sendPost(Object request, YlfxConfig config, YlfxV2MethodEnum methodEnum) {
+        return sendPost(request, config, methodEnum.getUri());
     }
 }

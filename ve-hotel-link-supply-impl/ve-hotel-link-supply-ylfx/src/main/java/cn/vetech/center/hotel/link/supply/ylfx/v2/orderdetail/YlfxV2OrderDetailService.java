@@ -5,6 +5,7 @@ import cn.vetech.center.hotel.link.api.orderdetail.vo.LinkHotelOrderDetailVO;
 import cn.vetech.center.hotel.link.enums.HotelGysOrderStatusEnum;
 import cn.vetech.center.hotel.link.supply.ylfx.common.YlfxConfig;
 import cn.vetech.center.hotel.link.supply.ylfx.v2.common.YlfxV2UtilsService;
+import cn.vetech.center.hotel.link.supply.ylfx.v2.enums.YlfxV2MethodEnum;
 import cn.vetech.center.hotel.link.util.JacksonUtils;
 import cn.vetech.center.hotel.link.util.orderdetail.OrderDetailApiRes;
 import cn.vetech.center.hotel.link.util.orderdetail.OrderDetailHandler;
@@ -14,12 +15,11 @@ import org.springframework.stereotype.Service;
 /** 易旅分销 V2 查询订单服务。 */
 @Service
 public class YlfxV2OrderDetailService {
-    private static final String URI = "/open/booking/search";
     @Autowired private YlfxV2UtilsService utilsService;
     public LinkHotelOrderDetailVO orderDetail(LinkHotelOrderDetailDTO dto, YlfxConfig config) {
         try {
             Request request = new Request(config.getCustomerCode(), dto.getLocalOrderId());
-            String responseBody = utilsService.sendPost(request, config, URI);
+            String responseBody = utilsService.sendPost(request, config, YlfxV2MethodEnum.QUERY_STATUS);
             Response response = JacksonUtils.parseNonEmpty(responseBody, Response.class);
             if (response == null || !"200".equals(response.getCode()) || response.getData() == null) {
                 return OrderDetailApiRes.fail(response == null ? "响应结果为空" : response.getMessage());

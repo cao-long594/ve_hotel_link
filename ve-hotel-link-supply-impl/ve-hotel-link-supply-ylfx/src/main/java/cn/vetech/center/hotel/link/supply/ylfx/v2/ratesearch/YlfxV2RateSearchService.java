@@ -15,6 +15,7 @@ import cn.vetech.center.hotel.link.enums.SearchNightlyRateStatusEnum;
 import cn.vetech.center.hotel.link.supply.ylfx.common.YlfxConfig;
 import cn.vetech.center.hotel.link.supply.ylfx.common.YlfxGysxdbj;
 import cn.vetech.center.hotel.link.supply.ylfx.v2.common.YlfxV2UtilsService;
+import cn.vetech.center.hotel.link.supply.ylfx.v2.enums.YlfxV2MethodEnum;
 import cn.vetech.center.hotel.link.supply.ylfx.v2.ratesearch.request.YlfxV2RateSearchRequest;
 import cn.vetech.center.hotel.link.supply.ylfx.v2.ratesearch.response.YlfxV2RateSearchResponse;
 import cn.vetech.center.hotel.link.util.JacksonUtils;
@@ -44,7 +45,6 @@ import java.util.stream.Collectors;
 @Service
 public class YlfxV2RateSearchService {
     private static final Logger LOGGER = LoggerFactory.getLogger(YlfxV2RateSearchService.class);
-    private static final String HOTEL_SEARCH_URI = "/open/avail/hotelsearch";
     @Autowired
     private YlfxV2UtilsService utilsService;
 
@@ -58,7 +58,7 @@ public class YlfxV2RateSearchService {
     public LinkHotelRateSearchVO rateSearch(LinkHotelRateSearchDTO dto, YlfxConfig config) {
         try {
             YlfxV2RateSearchRequest request = convertRequest(dto, config);
-            String responseBody = utilsService.sendPost(request, config, HOTEL_SEARCH_URI);
+            String responseBody = utilsService.sendPost(request, config, YlfxV2MethodEnum.HOTEL_SEARCH);
             YlfxV2RateSearchResponse response = JacksonUtils.parseNonEmpty(responseBody, YlfxV2RateSearchResponse.class);
             if (response == null || !StringUtils.equals("200", response.getCode())) {
                 return RateSearchApiRes.fail(response == null ? "响应结果为空" : response.getMessage());
@@ -169,7 +169,6 @@ public class YlfxV2RateSearchService {
             RateSearchCommonUtils.convertRoomStatus(plan, RoomStatusEnum.GOOD);
             YlfxGysxdbj gysxdbj = new YlfxGysxdbj();
             gysxdbj.setHotelId(hotelCode);
-            gysxdbj.setRoomCode(room.getRoomCode());
             plan.setGysxdbj(JacksonUtils.toJsonWithNonEmpty(gysxdbj));
             plan.setInstantConfirmation(InstantConfirmationEnum.instantConfirm(Integer.valueOf(1).equals(rate.getInstantConfirm())));
             if (rate.getMeal() != null) {

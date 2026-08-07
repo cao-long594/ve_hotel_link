@@ -8,6 +8,7 @@ import cn.vetech.center.hotel.link.enums.orderbook.HotelOrderBookErrorCodeEnum;
 import cn.vetech.center.hotel.link.supply.ylfx.common.YlfxConfig;
 import cn.vetech.center.hotel.link.supply.ylfx.common.YlfxGysxdbj;
 import cn.vetech.center.hotel.link.supply.ylfx.v2.common.YlfxV2UtilsService;
+import cn.vetech.center.hotel.link.supply.ylfx.v2.enums.YlfxV2MethodEnum;
 import cn.vetech.center.hotel.link.util.JacksonUtils;
 import cn.vetech.center.hotel.link.util.orderbook.OrderBookApiRes;
 import org.apache.commons.collections4.CollectionUtils;
@@ -20,12 +21,11 @@ import java.util.List;
 /** 易旅分销 V2 创建订单服务。 */
 @Service
 public class YlfxV2OrderBookService {
-    private static final String URI = "/open/booking/create";
     @Autowired private YlfxV2UtilsService utilsService;
     public LinkHotelOrderBookVO orderBook(LinkHotelOrderBookDTO dto, YlfxConfig config) {
         try {
             Request request = convertRequest(dto, config);
-            String responseBody = utilsService.sendPost(request, config, URI);
+            String responseBody = utilsService.sendPost(request, config, YlfxV2MethodEnum.BOOK);
             Response response = JacksonUtils.parseNonEmpty(responseBody, Response.class);
             if (response == null || !"200".equals(response.getCode()) || response.getData() == null || StringUtils.isBlank(response.getData().getOrderId())) {
                 return OrderBookApiRes.failSupportInverseQuery(HotelOrderBookErrorCodeEnum.GYSE_UN_10001, response == null ? "响应结果为空" : response.getMessage());
@@ -103,7 +103,6 @@ public class YlfxV2OrderBookService {
     private String buildGysxdbj(LinkHotelOrderBookDTO dto) {
         YlfxGysxdbj mark = new YlfxGysxdbj();
         mark.setHotelId(dto.getHotelId());
-        mark.setRoomCode(dto.getRoomId());
         return JacksonUtils.toJsonWithNonEmpty(mark);
     }
     private String[] splitName(String name) { if (StringUtils.isBlank(name)) return new String[]{"", ""}; int space=name.indexOf(' '); return space>0 ? new String[]{name.substring(0,space),name.substring(space+1)} : new String[]{name,""}; }
